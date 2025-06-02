@@ -1,53 +1,56 @@
 <template>
   <div class="container">
-<!-- Search Bar -->
-<div v-if="!selectedRoom" class="search-wrapper">
-  <div class="search-container" :class="{ 'active': searchQuery }">
-    <input type="text" v-model="searchQuery" placeholder="Mau kemana nih?" class="search-input" />
-    <span class="material-icons search-icon">search</span>
-  </div>
+    <!-- Logo -->
+    <div class="logo">
+      <img src="/src/assets/logo.png" alt="">
+    </div>
 
-  <!-- Search Results -->
-  <transition name="fade-slide">
-    <div v-if="filteredRooms.length && !selectedRoom" class="search-results">
-      <div class="room-list">
-        <div 
-          v-for="room in filteredRooms" 
-          :key="room.id" 
-          class="room-item"
-          @click="selectRoom(room)"
-          @mouseover="hoveredRoom = room.id"
-          @mouseleave="hoveredRoom = null"
-          :class="{ 'hovered': hoveredRoom === room.id }"
-        >
-          <strong>{{ room.name }}</strong>
-          <p>{{ room.location }}</p>
-        </div>
+    <!-- Search Bar -->
+    <div v-if="!selectedRoom" class="search-wrapper">
+      <div class="search-container" :class="{ 'active': searchQuery }">
+        <input type="text" v-model="searchQuery" placeholder="Mau kemana nih?" class="search-input" />
+        <span class="material-icons search-icon">search</span>
+      </div>
+
+<!-- Search Results -->
+<transition name="fade-slide">
+  <div v-if="!selectedRoom && searchQuery" class="search-results">
+    <div class="room-list" v-if="filteredRooms.length">
+      <div 
+        v-for="room in filteredRooms" 
+        :key="room.id" 
+        class="room-item"
+        @click="selectRoom(room)"
+        @mouseover="hoveredRoom = room.id"
+        @mouseleave="hoveredRoom = null"
+        :class="{ 'hovered': hoveredRoom === room.id }"
+      >
+        <strong>{{ room.name }}</strong>
+        <p>{{ room.location }}</p>
       </div>
     </div>
-  </transition>
-</div>
+    <div v-else class="no-result">
+      <p>Lokasi tidak tersedia</p>
+    </div>
+  </div>
+</transition>
 
+    </div>
 
     <!-- Room Detail -->
     <transition name="slide">
-    <RoomDetail
-      v-if="selectedRoom"
-      :room="selectedRoom"
-      @close="selectedRoom = null"
-    />
+      <RoomDetail
+        v-if="selectedRoom"
+        :room="selectedRoom"
+        @close="selectedRoom = null"
+      />
     </transition>
 
-
-    <!-- Icons -->
+    <!-- Icons
     <div v-if="!selectedRoom" class="icon-container">
-      <span class="material-icons">
-      accessible
-      </span>
-      <span class="material-icons">
-      assist_walker
-      </span>
-    </div>
+      <span class="material-icons">accessible</span>
+      <span class="material-icons">assist_walker</span>
+    </div> -->
 
     <!-- Description -->
     <div v-if="!selectedRoom" class="description">
@@ -66,6 +69,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed } from 'vue';
 import RoomDetail from '../components/RoomDetails.vue';
@@ -83,14 +87,21 @@ const rooms = ref([
 ]);
 
 const filteredRooms = computed(() => {
-  if (!searchQuery.value) return [];
-  return rooms.value.filter(room => room.name.toLowerCase().includes(searchQuery.value.toLowerCase())).slice(0, 3);
+  if (!searchQuery.value.trim()) return [];
+  return rooms.value.filter(room =>
+    room.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  ).slice(0, 3);
+});
+
+const noResultFound = computed(() => {
+  return searchQuery.value.trim() !== '' && filteredRooms.value.length === 0;
 });
 
 const selectRoom = (room) => {
   selectedRoom.value = room;
 };
 </script>
+
 
 <style scoped>
 .container {
@@ -99,8 +110,8 @@ const selectRoom = (room) => {
   align-items: center;
   justify-content: center;
   min-height: 97vh;
-  background: url('/src/assets/bg_green.png');
-  background-size: cover;
+  /* background: url('/src/assets/bg_green.png');
+  background-size: cover; */
   text-align: center;
   padding: 20px;
 }
@@ -322,4 +333,32 @@ const selectRoom = (room) => {
     margin: auto;
   }
 }
+
+.logo {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.logo img {
+  width: 300px;
+  max-width: 90vw;
+  height: auto;
+  animation: fade-in-logo 1s ease-in-out;
+}
+
+@media (max-width: 600px) {
+  .logo img {
+    width: 300px;
+  }
+}
+
+.no-result {
+  padding: 12px;
+  color: #999;
+  text-align: center;
+  font-style: italic;
+}
+
 </style>

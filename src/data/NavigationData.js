@@ -84,4 +84,5 @@ export const directionIcons = {
     spot: 'location_on',
     naik: 'arrow_upward',
     turun: 'arrow_downward',
+    ramp: 'accessible_forward',
   };

@@ -22,20 +22,29 @@
   </template>
   
   <script setup>
+  import { onMounted, ref } from 'vue';
   import { useRoute } from 'vue-router';
-  import { roomSlides, directionIcons } from '../data/navigationData';
+  import axios from 'axios';
+  import { directionIcons } from '../data/NavigationData';
   
-  defineProps({ visible: Boolean });
-  
+  const props = defineProps({ visible: Boolean });
   const route = useRoute();
-  const roomName = route.params.roomName;
-  const slides = roomSlides[roomName] || [];
   
-  const steps = slides.map(slide => ({
-    icon: directionIcons[slide.direction] || 'help_outline',
-    instruction: slide.instruction,
-    sub: slide.distance || '',
-  }));
+  const roomName = route.params.roomName;
+  const steps = ref([]);
+  
+  onMounted(async () => {
+    try {
+      const res = await axios.get(`http://localhost:3000/api/slides/${encodeURIComponent(roomName)}`);
+      steps.value = res.data.map(step => ({
+        icon: directionIcons[step.arah?.toLowerCase()] || 'help_outline',
+        instruction: step.deskripsi_langkah,
+        sub: step.jarak || '',
+      }));
+    } catch (err) {
+      console.error('Failed to fetch route details:', err);
+    }
+  });
   </script>
   
   

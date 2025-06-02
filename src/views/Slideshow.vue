@@ -52,10 +52,11 @@
         Selesaikan Perjalanan
       </button>
 
-      <div class="help-center">
-        <span class="material-icons">support_agent</span> Pusat Bantuan
+        <!-- Pusat Bantuan dengan Transisi -->
+        <div class="help-center" @click="goToHelp">
+          <span class="material-icons">support_agent</span> Pusat Bantuan
+        </div>
       </div>
-    </div>
 
     <!-- Custom Alert Modal -->
     <CustomAlert
@@ -70,32 +71,50 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
 import CustomAlert from '../components/CustomAlert.vue';
 import RouteDetails from '../components/RouteDetails.vue';
-import { roomSlides } from '../data/NavigationData';
 import { directionIcons } from '../data/NavigationData';
-
 
 const router = useRouter();
 const route = useRoute();
 const currentIndex = ref(0);
-const showModal = ref(false); // modal visibility
-const roomName = route.params.roomName;
-const slideshowData = roomSlides[roomName] || [];
-const currentSlide = computed(() => slideshowData[currentIndex.value] || {});
+const showModal = ref(false);
 const showDetails = ref(false);
+const roomName = route.params.roomName;
+
+// Data slideshow dari backend
+const slideshowData = ref([]);
+
+// Ambil data dari backend pas mounted
+onMounted(async () => {
+  try {
+    const res = await axios.get(`http://localhost:3000/api/slides/${encodeURIComponent(roomName)}`);
+    // Mapping struktur response ke format yang digunakan di frontend
+    slideshowData.value = res.data.map(item => ({
+      instruction: item.deskripsi_langkah,
+      image: item.url_gambar,
+      direction: item.arah?.toLowerCase() || 'help_outline',
+      distance: item.jarak || '' // kalau kamu nanti tambahkan kolom jarak
+    }));
+  } catch (err) {
+    console.error('Gagal ambil data slideshow:', err);
+  }
+});
+
+const currentSlide = computed(() => slideshowData.value[currentIndex.value] || {});
 
 const currentIcon = computed(() => {
-  const dir = currentSlide.value?.direction?.toLowerCase();
+  const dir = currentSlide.value?.direction;
   return directionIcons[dir] || 'navigation';
 });
 
 const previewImage = new URL('../assets/rooms/koridor1.jpg', import.meta.url).href;
 
 function nextSlide() {
-  if (currentIndex.value < slideshowData.length - 1) {
+  if (currentIndex.value < slideshowData.value.length - 1) {
     currentIndex.value++;
   }
 }
@@ -107,6 +126,9 @@ function prevSlide() {
 function confirmFinish() {
   showModal.value = false;
   router.push('/');
+}
+function goToHelp() {
+  router.push(`/help/${encodeURIComponent(roomName)}`);
 }
 </script>
 
@@ -208,10 +230,10 @@ function confirmFinish() {
     display: flex;
     justify-content: center;
     gap: 8px;
-    margin-top: 400px;
+    margin-top: 500px;
     z-index: 2;
     /* background: #9c9c9c; */
-    width: 100%;
+    width: 50%;
     padding: 3px 0;
     border-radius: 8px;
   }
@@ -327,6 +349,5 @@ function confirmFinish() {
   font-size: 14px;
   color: #9a9a9a;
 }
-
-  </style>
+</style>
   
