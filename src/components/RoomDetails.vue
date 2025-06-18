@@ -46,16 +46,7 @@ const images = ref([]);
 const roomData = ref(props.room); // langsung dari props
 
 onMounted(() => {
-  const roomImages = {
-    "Ruang A3": [
-      new URL("../assets/rooms/RoomA3.jpg", import.meta.url).href
-    ],
-    "Ruang B2": [
-      new URL("@/assets/rooms/b2-1.png", import.meta.url).href
-    ]
-  };
-
-  images.value = roomImages[props.room.name] || [];
+   images.value = roomData.value.image ? [roomData.value.image] : [];
 });
 
 function goToSlideshow() {

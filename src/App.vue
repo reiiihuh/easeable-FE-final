@@ -1,4 +1,8 @@
 <script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+import Navbar from './components/Navbar.vue';
+
 import { onMounted, onBeforeUnmount } from 'vue';
 
 onMounted(() => {
@@ -17,12 +21,26 @@ onBeforeUnmount(() => {
   document.documentElement.style.backgroundPosition = '';
   document.documentElement.style.height = '';
 });
+
+const route = useRoute();
+
+// Tampilkan navbar kecuali di halaman Login dan Register
+const showNavbar = computed(() => {
+  return route.path !== '/login' && route.path !== '/register';
+})
+
 </script>
 
 
 <template>
   <div class="app">
-    <router-view />
+    <!-- Komponen Navbar (isi profile & notifikasi) -->
+    <Navbar v-if="showNavbar" />
+
+    <!-- Konten Utama -->
+    <div class="main-content">
+      <router-view />
+    </div>
   </div>
 </template>
 

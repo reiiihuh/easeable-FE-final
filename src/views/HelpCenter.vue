@@ -1,9 +1,9 @@
 <template>
   <div class="help-container">
     <!-- Logo -->
-    <div class="logo">
+    <!-- <div class="logo">
       <img src="/src/assets/logo.png" alt="easeable">
-    </div>
+    </div> -->
 
     <!-- Header -->
     <div class="header">
@@ -28,12 +28,6 @@
       <button class="back-button" @click="goBack">Kembali</button>
     </div>
 
-    <!-- Custom Alert -->
-    <transition name="fade">
-      <div v-if="showAlert" class="custom-alert">
-        Terima kasih atas feedbacknya!
-      </div>
-    </transition>
 
     <!-- Supported By -->
     <div class="supported-by">
@@ -49,34 +43,14 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 
 const category = ref('');
 const comment = ref('');
 const showAlert = ref(false);  // Untuk menampilkan Custom Alert
 const router = useRouter();
 const route = useRoute();
-
-function submitFeedback() {
-  if (!category.value || !comment.value) {
-    alert('Mohon lengkapi semua bidang.');
-    return;
-  }
-
-  // Tampilkan Custom Alert
-  showAlert.value = true;
-  setTimeout(() => {
-    showAlert.value = false;
-    // Ambil nama ruangan dari parameter URL
-    const roomName = route.params.roomName;
-
-    if (roomName) {
-      // Arahkan kembali ke slideshow dengan roomName
-      router.push(`/slideshow/${encodeURIComponent(roomName)}`);
-    } else {
-      router.push('/Homepage');
-    }
-  }, 1500); // Durasi alert sebelum dialihkan
-}
 
 function goBack() {
   const roomName = route.params.roomName;
@@ -86,33 +60,81 @@ function goBack() {
     router.push('/Homepage');
   }
 }
+
+function submitFeedback() {
+  if (!category.value || !comment.value) {
+    Swal.fire({
+      customClass: {
+        popup: 'swal-custom'
+      },
+      icon: 'warning',
+      title: 'Lengkapi semua data!',
+      confirmButtonText: 'OK',
+    });
+    return;
+  }
+
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || !user.id_mahasiswa) {
+    Swal.fire({
+      customClass: {
+        popup: 'swal-custom'
+      },
+      icon: 'error',
+      title: 'Anda belum login.',
+      confirmButtonText: 'Login',
+    });
+    return;
+  }
+
+  axios.post('http://localhost:3000/api/feedback/submit', {
+    id_mahasiswa: user.id_mahasiswa,
+    jenis_laporan: category.value,
+    deskripsi: comment.value,
+  })
+  .then(() => {
+    Swal.fire({
+      customClass: {
+        popup: 'swal-custom'
+      },
+      position: 'top-end',
+      icon: 'success',
+      title: 'Feedback berhasil dikirim!',
+      showConfirmButton: false,
+      timer: 1500
+    });
+
+    setTimeout(() => {
+      const roomName = route.params.roomName;
+      if (roomName) {
+        router.push(`/slideshow/${encodeURIComponent(roomName)}`);
+      } else {
+        router.push('/Homepage');
+      }
+    }, 1600);
+  })
+  .catch(() => {
+    Swal.fire({
+      customClass: {
+        popup: 'swal-custom'
+      },
+      icon: 'error',
+      title: 'Gagal mengirim feedback',
+      text: 'Silakan coba lagi.',
+    });
+  });
+
+
+}
 </script>
 
 
 <style scoped>
-/* Animasi Transisi */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-.custom-alert {
-  background-color: #4caf50;
-  color: white;
-  padding: 10px;
-  margin: 10px;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: bold;
-}
-
 /* Struktur Kontainer Utama */
 
 .logo {
   position: absolute;
-  top: -20px;
+  top: 0px;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -166,9 +188,10 @@ select, textarea {
   padding: 12px;
   border-radius: 5px;
   border: 1px solid #ccc;
-  width: 90%;
+  width: 80%;
   font-size: 0.8rem;
-  font-weight: bold;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
 }
 
 textarea {

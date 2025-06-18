@@ -71,20 +71,29 @@
 
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 import RoomDetail from '../components/RoomDetails.vue';
 
 const searchQuery = ref('');
 const selectedRoom = ref(null);
 const hoveredRoom = ref(null);
+const rooms = ref([]);
 
-const rooms = ref([
-  { id: 1, name: "Ruang A1", location: "Lt.2 Gedung Selaru, Fakultas Ilmu Terapan" },
-  { id: 2, name: "Ruang A2", location: "Lt.2 Gedung Selaru, Fakultas Ilmu Terapan" },
-  { id: 3, name: "Ruang A3", location: "Lt.2 Gedung Selaru, Fakultas Ilmu Terapan" },
-  { id: 4, name: "Ruang A4", location: "Lt.2 Gedung Selaru, Fakultas Ilmu Terapan" },
-  { id: 5, name: "Ruang A5", location: "Lt.2 Gedung Selaru, Fakultas Ilmu Terapan" }
-]);
+onMounted(async () => {
+  try {
+    const res = await axios.get('http://localhost:3000/api/locations');
+    rooms.value = res.data.map((item) => ({
+      id: item.id_lokasi,
+      name: item.nama_lokasi,
+      location: item.deskripsi,
+      info: item.info?.split(';') || [],
+      image: item.url_placeholder
+    }));
+  } catch (err) {
+    console.error('❌ Gagal ambil data lokasi:', err);
+  }
+});
 
 const filteredRooms = computed(() => {
   if (!searchQuery.value.trim()) return [];
@@ -98,7 +107,12 @@ const noResultFound = computed(() => {
 });
 
 const selectRoom = (room) => {
-  selectedRoom.value = room;
+  selectedRoom.value = {
+    name: room.name,
+    location: room.location,
+    additionalInfo: room.info,
+    image: room.image
+  };
 };
 </script>
 

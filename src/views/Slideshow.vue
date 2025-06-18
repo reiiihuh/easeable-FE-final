@@ -29,10 +29,11 @@
     </div>
 
     <!-- Live Preview -->
-    <div class="live-preview">
+    <div class="live-preview" @click="showLivePreview = true">
       <img :src="previewImage" alt="Live Preview" />
       <div class="live-label">Live</div>
     </div>
+
 
     <!-- Route Details Overlay -->
     <RouteDetails :visible="showDetails" @close="showDetails = false" />
@@ -67,6 +68,7 @@
 
     <!-- Route Details Modal -->
     <RouteDetails :visible="showDetails" @close="showDetails = false" />
+    <LivePreview :visible="showLivePreview" :gifUrl="currentSlide.gif" @close="showLivePreview = false" />
   </div>
 </template>
 
@@ -77,12 +79,15 @@ import { useRoute, useRouter } from 'vue-router';
 import CustomAlert from '../components/CustomAlert.vue';
 import RouteDetails from '../components/RouteDetails.vue';
 import { directionIcons } from '../data/NavigationData';
+import LivePreview from '../components/LivePreview.vue';
+
 
 const router = useRouter();
 const route = useRoute();
 const currentIndex = ref(0);
 const showModal = ref(false);
 const showDetails = ref(false);
+const showLivePreview = ref(false);
 const roomName = route.params.roomName;
 
 // Data slideshow dari backend
@@ -96,6 +101,7 @@ onMounted(async () => {
     slideshowData.value = res.data.map(item => ({
       instruction: item.deskripsi_langkah,
       image: item.url_gambar,
+      gif: item.url_gif,
       direction: item.arah?.toLowerCase() || 'help_outline',
       distance: item.jarak || '' // kalau kamu nanti tambahkan kolom jarak
     }));
@@ -111,7 +117,12 @@ const currentIcon = computed(() => {
   return directionIcons[dir] || 'navigation';
 });
 
-const previewImage = new URL('../assets/rooms/koridor1.jpg', import.meta.url).href;
+const previewImage = computed(() => {
+  const gifUrl = currentSlide.value?.gif || '';
+  if (!gifUrl) return '';
+  return gifUrl.replace('/upload/', '/upload/pg_1/');
+});
+
 
 function nextSlide() {
   if (currentIndex.value < slideshowData.value.length - 1) {
@@ -125,7 +136,7 @@ function prevSlide() {
 }
 function confirmFinish() {
   showModal.value = false;
-  router.push('/');
+  router.push('/Homepage');
 }
 function goToHelp() {
   router.push(`/help/${encodeURIComponent(roomName)}`);
@@ -147,41 +158,47 @@ function goToHelp() {
   
   .slideshow-image {
     width: 100%;
-    height: 100%;
+    height: 85%;
     object-fit: cover;
     position: absolute;
   }
   
   .nav-info {
   position: absolute;
-  top: 20px;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
   background: #0c7b53;
   color: white;
   padding: 20px 30px;
   border-radius: 12px;
-  text-align: center;
   z-index: 2;
   font-size: 14px;
   font-weight: bold;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* KUNCI: biar icon & teks mulai dari atas */
   gap: 15px;
   width: 80%;
-  flex-wrap: wrap; /* biar responsif */
+  flex-wrap: wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  text-align: left;
 }
 
 .nav-icon {
   font-size: 32px;
+  flex-shrink: 0; /* KUNCI: biar icon gak ikut ngecil kalau space sempit */
+  margin-top: 2px; /* biar lebih sejajar pas teks 2 baris */
 }
 
 .nav-text {
   display: flex;
   flex-direction: column;
-  text-align: left;
+  justify-content: center;
+  flex: 1; /* KUNCI: biar teks bisa ambil space sisa */
+  min-width: 0;
 }
 
 .direction-text,
@@ -189,8 +206,6 @@ function goToHelp() {
   margin: 0;
   font-size: 18px;
 }
-
-
   
   .arrow {
   position: absolute;
