@@ -29,6 +29,7 @@ const showNavbar = computed(() => {
   return route.path !== '/login' && route.path !== '/register';
 })
 
+console.log("EaseAble v1.0 by Rei Mahendra (2025)")
 </script>
 
 
@@ -52,3 +53,6 @@ const showNavbar = computed(() => {
 	font-family: 'Poppins', sans-serif;
   }
 </style>
+
+// Developed by Rei Sama - TA EaseAble 2025
+// Unauthorized duplication is prohibited

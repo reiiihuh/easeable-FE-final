@@ -5,3 +5,6 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
 })
+
+// Developed by Rei Sama - TA EaseAble 2025
+// Unauthorized duplication is prohibited
